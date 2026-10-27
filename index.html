@@ -565,8 +565,7 @@ function viewSetup(){
 
 <section class="blk" aria-labelledby="h-m">
   <h2 id="h-m">Matcher</h2>
-  <p class="msg" id="mStatus" style="margin:0 0 10px"></p>
-  <div id="mlist" class="mlist"></div>
+  <p class="msg" id="mStatus" style="margin:0"></p>
   <p class="msg" id="fetchMsg" role="status"></p>
   <div class="row">
     <button class="btn" id="btnLoad" type="button">Hämta matcher</button>
@@ -609,13 +608,6 @@ function renderWeek(){
 }
 
 function renderMatchesPreview(){
-  const box = $('#mlist');
-  const rows = S.matches.map((m, i) => {
-    const has = m.home.trim() && m.away.trim();
-    const nums = [0, 1, 2].map(s => `<span class="n"><b>${fmtOdds(m.odds[s])}</b><small>${fmtPct(m.folk[s])}</small></span>`).join('');
-    return `<div class="mrow"><span class="mnr">${i + 1}</span><span class="mteams${has ? '' : ' empty'}">${has ? esc(m.home) + ' – ' + esc(m.away) : 'Ej ifylld'}</span>${nums}</div>`;
-  }).join('');
-  box.innerHTML = `<div class="mhead"><span></span><span>Övre siffran är odds, nedre är streck</span><span>1</span><span>X</span><span>2</span></div>${rows}`;
   const n = filledCount();
   const st = $('#mStatus');
   st.className = 'msg' + (n === 13 ? ' ok' : ' warn');
