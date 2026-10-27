@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14573F">
+<title>Strycktips tillsammans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F3; --surface:#FFFFFF; --ink:#16202B; --muted:#5A6672; --line:#CDD5DC;
+  --turf:#14573F; --turf-soft:#F0F7F3; --flag:#F2C230; --danger:#B3261E; --focus:#2B6BFF;
+  --font:'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.45 var(--font)}
+#app{max-width:600px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--paper)}
+[hidden]{display:none !important}
+h1,h2,h3{margin:0;font-stretch:70%;font-weight:800;line-height:1.05}
+p{margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* ---------- Buttons & inputs ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:10px;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
+.btn.primary{background:var(--turf);border-color:var(--turf);color:#fff}
+.btn.big{min-height:60px;font-size:20px;width:100%}
+.btn.quiet{border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=number],input[type=url],input[type=date],textarea{width:100%;min-height:46px;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface)}
+textarea{resize:vertical}
+label{font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.row > .btn{flex:1 1 140px}
+.hint{font-size:14px;color:var(--muted)}
+.msg{font-size:15px;margin-top:10px}
+.msg.warn{color:var(--danger);font-weight:600}
+.msg.ok{color:var(--turf);font-weight:600}
+
+/* ---------- Start screen ---------- */
+.hero{background:var(--turf);color:#fff;padding:calc(26px + env(safe-area-inset-top)) 20px 22px}
+.hero h1{font-size:clamp(68px,24vw,112px);letter-spacing:-.01em}
+.hero-sub{margin-top:6px;font-size:18px;opacity:.92}
+.hero-change{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:14px;font-weight:500;color:#D6EBDF}
+.hero-change input{width:auto;min-height:40px;background:transparent;border-color:rgba(255,255,255,.45);color:#fff;color-scheme:dark}
+section.blk{padding:24px 20px;border-bottom:1px solid var(--line)}
+section.blk h2{font-size:32px;margin-bottom:12px}
+.panel{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line)}
+.panel label{display:block;margin-bottom:6px}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
+details textarea{margin:8px 0 10px}
+
+.mlist{margin:0 -20px 4px;border-top:1px solid var(--line)}
+.mhead,.mrow{display:grid;grid-template-columns:30px 1fr repeat(3,46px);gap:0 4px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line)}
+.mhead{font-size:13px;color:var(--muted);font-weight:600;padding-top:6px;padding-bottom:6px}
+.mhead span:nth-child(n+3),.mrow .n{text-align:center}
+.mnr{font-stretch:70%;font-weight:800;font-size:20px;color:var(--muted)}
+.mteams{font-weight:600;line-height:1.2}
+.mteams.empty{color:var(--muted);font-weight:400}
+.n{display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.n b{font-size:15px}
+.n small{font-size:12px;color:var(--muted)}
+
+.budget{display:flex;align-items:center;gap:10px}
+.budget input{max-width:180px;font-size:24px;font-weight:700;min-height:54px}
+.budget span{font-size:20px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
+.chip{min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer}
+.chip[aria-pressed=true]{border-color:var(--turf);background:var(--turf-soft);color:var(--turf)}
+#sysList{margin-top:14px}
+.sys{display:block;position:relative;margin-bottom:8px;padding:12px 14px 12px 48px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:400}
+.sys input{position:absolute;left:15px;top:50%;width:20px;height:20px;margin:0;transform:translateY(-50%);accent-color:var(--turf)}
+.sys:has(input:checked){border-color:var(--turf);box-shadow:inset 0 0 0 1.5px var(--turf);background:var(--turf-soft)}
+.sys span{display:block}
+.sys-main{font-stretch:75%;font-weight:800;font-size:24px;line-height:1.1}
+.sys-meta{font-weight:600;margin-top:2px}
+.sys-sub{font-size:14px;color:var(--muted);margin-top:2px}
+
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:52px;height:52px;border-radius:10px;border:1.5px solid var(--ink);background:var(--surface);font-size:28px;font-weight:700;line-height:1;cursor:pointer}
+.stepper output{min-width:56px;text-align:center;font-stretch:70%;font-weight:800;font-size:44px;line-height:1}
+.names{margin-top:14px;display:grid;gap:8px}
+.pname{display:flex;align-items:center;gap:10px}
+.pname i{flex:0 0 22px;height:22px;border-radius:50%}
+.pname input{min-height:42px}
+.start-info{font-weight:700;margin-bottom:10px}
+
+/* ---------- Edit screen ---------- */
+.bar{display:flex;align-items:center;gap:14px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bar h1{font-size:30px}
+.bar .btn{min-height:42px;padding:0 12px}
+.erow{margin:0;padding:12px 16px 14px;border:0;border-bottom:1px solid var(--line)}
+.erow legend{padding:0;font-stretch:70%;font-weight:800;font-size:20px;color:var(--muted)}
+.epair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.enums{display:grid;grid-template-columns:auto repeat(3,1fr);gap:6px;align-items:center;margin-top:8px}
+.enums span{font-size:13px;color:var(--muted);font-weight:600}
+.enums input{min-height:40px;padding:6px;text-align:center}
+.dock{position:sticky;bottom:0;display:flex;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line);z-index:5}
+.dock .btn{flex:1}
+
+/* ---------- Tipping screen ---------- */
+.turn{position:sticky;top:0;z-index:5;padding:calc(8px + env(safe-area-inset-top)) 16px 12px;background:var(--tc);color:#fff}
+.turn-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px;font-weight:600}
+.turn-back{min-height:34px;padding:0 10px;border-radius:8px;border:1.5px solid rgba(255,255,255,.55);background:transparent;color:#fff;font-weight:600;cursor:pointer}
+.turn-name{margin:4px 0 6px;font-stretch:70%;font-weight:800;font-size:clamp(42px,14vw,64px);line-height:1;overflow-wrap:anywhere;animation:handover .35s ease-out}
+.turn-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.32);overflow:hidden}
+.turn-bar i{display:block;height:100%;background:#fff}
+@keyframes handover{from{opacity:.25;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.quota{display:flex;flex-wrap:wrap;gap:4px 18px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line);font-size:14px}
+.quota b{font-weight:700}
+.cap{padding:12px 16px 4px;font-size:14px;color:var(--muted)}
+.matches{list-style:none;margin:0;padding:0}
+.match{display:grid;grid-template-columns:30px 1fr;gap:0 8px;padding:14px 16px 16px;border-bottom:1px solid var(--line)}
+.mnum{font-stretch:70%;font-weight:800;font-size:26px;line-height:1.1;color:var(--muted)}
+.mname{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:700;font-size:18px;line-height:1.2}
+.mtag{flex:none;padding:1px 8px;border-radius:10px;background:var(--flag);color:var(--ink);font-size:12px;font-weight:700}
+.signs{grid-column:2;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.sign{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:88px;padding:6px 2px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;transition:background-color .12s,transform .12s}
+.sign:active{transform:scale(.97)}
+.sg{font-stretch:70%;font-weight:800;font-size:36px;line-height:1}
+.od{margin-top:4px;font-size:14px;font-weight:700}
+.fo{font-size:13px;color:var(--muted)}
+.sign.on{background:var(--pc);border-color:var(--pc);color:#fff}
+.sign.on .fo{color:rgba(255,255,255,.88)}
+.sign.blocked{opacity:.38}
+.who{position:absolute;top:5px;right:6px;min-width:20px;height:20px;padding:0 4px;border-radius:10px;background:#fff;color:var(--pc);font-size:12px;font-weight:800;display:grid;place-items:center}
+
+/* ---------- Finished screen ---------- */
+.done{background:var(--turf);color:#fff;padding:calc(24px + env(safe-area-inset-top)) 20px 20px}
+.done h1{font-size:clamp(48px,16vw,76px)}
+.done p{margin-top:6px;font-size:17px;opacity:.92}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:14px 20px 4px;font-size:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:50%}
+.slip{list-style:none;margin:0;padding:0}
+.srow{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line)}
+.srow .mteams{font-weight:600}
+.sboxes{display:flex;gap:5px}
+.sbox{display:grid;place-items:center;width:38px;height:38px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);font-stretch:70%;font-weight:800;font-size:20px;color:#9AA5AF}
+.sbox.on{background:var(--pc);border-color:var(--pc);color:#fff}
+.out{padding:22px 20px;display:grid;gap:10px}
+.compact{padding:12px;border:1.5px dashed var(--line);border-radius:8px;background:var(--surface);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;line-height:1.6;overflow-wrap:anywhere;user-select:all}
+.guide{padding:0 20px 20px;font-size:15px}
+.guide p{margin-top:8px}
+.foot{padding:18px 20px calc(28px + env(safe-area-inset-bottom));font-size:13px;color:var(--muted)}
+
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,12px);max-width:min(92vw,460px);padding:12px 16px;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;font-size:15px;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  .turn-name{animation:none}
+  .sign,#toast{transition:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:20px">Den här sidan behöver JavaScript för att fungera.</p></noscript>
+
+<script>
+(() => {
+'use strict';
+
+/* =========================================================
+   Konstanter och hjälpfunktioner
+   ========================================================= */
+const SIGNS = ['1', 'X', '2'];
+const ROW_PRICE = 1; // kr per rad på Stryktipset
+const COLORS = ['#C7312B','#1F5FBF','#1E8A4C','#8A3FC4','#D9730D','#0E8A94','#B5307A','#6B7A12','#7A4B2A','#8C6D00','#37474F','#E0457B'];
+const DAYS = ['söndag','måndag','tisdag','onsdag','torsdag','fredag','lördag'];
+const MONTHS = ['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
+const KEY = 'strycktips.v1';
+
+const app = document.getElementById('app');
+const toastEl = document.getElementById('toast');
+const $ = (sel, root = document) => root.querySelector(sel);
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtOdds = v => v == null ? '–' : v.toFixed(2).replace('.', ',');
+const fmtPct = v => v == null ? '–' : Math.round(v) + '%';
+const fmtKr = n => n.toLocaleString('sv-SE') + ' kr';
+const toNum = v => { if (v == null || v === '') return null; const x = parseFloat(String(v).replace(',', '.').replace('%', '')); return isFinite(x) ? x : null; };
+const pad = n => String(n).padStart(2, '0');
+
+function isoDate(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function parseIso(s){ const p = String(s || '').split('-').map(Number); if (p.length !== 3 || p.some(isNaN)) return null; return new Date(p[0], p[1] - 1, p[2]); }
+function upcomingSaturday(from){
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));
+  return d;
+}
+function isoWeek(d){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+}
+
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+}
+
+/* =========================================================
+   Tillstånd
+   ========================================================= */
+const emptyMatch = () => ({ home: '', away: '', odds: [null, null, null], folk: [null, null, null] });
+
+function defaultState(){
+  return {
+    step: 'setup',
+    url: '',
+    drawNumber: '',
+    matchesDate: '',
+    date: isoDate(upcomingSaturday(new Date())),
+    matches: Array.from({ length: 13 }, emptyMatch),
+    budget: 700,
+    nPlayers: 5,
+    names: [],
+    choice: null,   // { f: antal hel, h: antal halv }
+    moves: []       // [{ m: matchindex, s: 0|1|2 }] i den ordning de sattes
+  };
+}
+
+let S = defaultState();
+
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* lagring ej tillgänglig */ } }
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (!o || typeof o !== 'object') return;
+    const d = defaultState();
+    S = Object.assign(d, o);
+    if (!Array.isArray(S.matches) || S.matches.length !== 13) S.matches = d.matches;
+    if (!Array.isArray(S.moves)) S.moves = [];
+    if (!Array.isArray(S.names)) S.names = [];
+    if (S.step === 'edit' || S.step === 'plan') S.step = 'setup';
+    if ((S.step === 'tippa' || S.step === 'klar') && (!S.choice || !hasMatches())) S.step = 'setup';
+  } catch (e) { S = defaultState(); }
+}
+
+const hasMatches = () => S.matches.every(m => m.home.trim() && m.away.trim());
+const filledCount = () => S.matches.filter(m => m.home.trim() && m.away.trim()).length;
+const nameOf = i => (S.names[i] || '').trim() || ('Tippare ' + (i + 1));
+const colorOf = i => COLORS[i % COLORS.length];
+
+function weekInfo(){
+  const d = parseIso(S.date) || upcomingSaturday(new Date());
+  return { week: isoWeek(d), label: DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] };
+}
+function couponId(){ const m = String(S.url || '').match(/stryktipset\/(\d+)/i); return m ? m[1] : ''; }
+
+/* =========================================================
+   System (garderingar)
+   ========================================================= */
+// f = helgarderingar (3 tecken), h = halvgarderingar (2 tecken), resten spikar (1 tecken)
+const rowsOf = s => Math.pow(3, s.f) * Math.pow(2, s.h);
+const totalSigns = s => 13 + s.h + 2 * s.f;
+
+function systemOptions(budget, limit = 6){
+  const out = [];
+  for (let f = 0; f <= 13; f++){
+    for (let h = 0; f + h <= 13; h++){
+      const rows = Math.pow(3, f) * Math.pow(2, h) * ROW_PRICE;
+      if (rows <= budget) out.push({ f, h, rows, signs: 13 + h + 2 * f, singles: 13 - f - h });
+    }
+  }
+  out.sort((a, b) => b.rows - a.rows);
+  return out.slice(0, limit);
+}
+function sysName(o){
+  const p = [];
+  if (o.f) p.push(o.f + ' hel');
+  if (o.h) p.push(o.h + ' halv');
+  return p.length ? p.join(' + ') : 'Enkelrad';
+}
+const fmtRange = x => Number.isInteger(x) ? String(x) : Math.floor(x) + '–' + Math.ceil(x);
+
+/* =========================================================
+   Streck, tur och regler
+   ========================================================= */
+function matchCounts(){ const c = Array(13).fill(0); S.moves.forEach(mv => c[mv.m]++); return c; }
+function marksOf(m){ const r = []; S.moves.forEach((mv, k) => { if (mv.m === m) r.push({ s: mv.s, k }); }); return r; }
+
+function canAdd(m, s, counts){
+  const c = counts || matchCounts();
+  const sys = S.choice;
+  if (S.moves.some(x => x.m === m && x.s === s)) return { ok: false, reason: 'dup' };
+  if (c[m] >= 3) return { ok: false, reason: 'full' };
+  const n3 = c.filter(x => x === 3).length;
+  const n2p = c.filter(x => x >= 2).length;
+  const nc = c[m] + 1;
+  if (n3 + (nc === 3 ? 1 : 0) > sys.f) return { ok: false, reason: 'hel' };
+  if (n2p + (nc === 2 ? 1 : 0) > sys.f + sys.h) return { ok: false, reason: 'garder' };
+  return { ok: true };
+}
+const REASONS = {
+  hel: 'Alla helgarderingar (3 streck) är redan använda.',
+  garder: 'Alla garderingar är redan använda – den här matchen blir en spik.',
+  full: 'Matchen har redan alla tre tecken.'
+};
+
+function place(m, s){
+  const last = S.moves.length - 1;
+  const existing = S.moves.findIndex(x => x.m === m && x.s === s);
+  if (existing !== -1){
+    if (existing === last){ undo(); return; }
+    toast('Bara det senaste strecket kan ångras. Använd "Ångra senaste".');
+    return;
+  }
+  const chk = canAdd(m, s);
+  if (!chk.ok){ toast(REASONS[chk.reason] || 'Det strecket går inte i det här systemet.'); return; }
+  S.moves.push({ m, s });
+  if (S.moves.length >= totalSigns(S.choice)) S.step = 'klar';
+  save(); render();
+}
+function undo(){
+  if (!S.moves.length) return;
+  S.moves.pop();
+  if (S.step === 'klar') S.step = 'tippa';
+  save(); render();
+}
+
+/* =========================================================
+   Inläsning av matcher
+   ========================================================= */
+const hasLetters = s => /[^\W\d_]{2,}/u.test(s);
+const triplets = arr => { const t = []; for (let i = 0; i + 2 < arr.length; i += 3) t.push(arr.slice(i, i + 3)); return t; };
+const sum = a => a.reduce((x, y) => x + y, 0);
+
+function parseText(text){
+  const lines = String(text).replace(/\r/g, '').split('\n').map(l => l.replace(/\u00a0/g, ' ').trim()).filter(Boolean);
+  const pairRe = /^(?:(\d{1,2})[.)]?\s+)?(.{2,}?)\s+[-–—]\s+(.{2,}?)(?=\s+\d|\s*$)/;
+  const blocks = [];
+  lines.forEach((ln, i) => {
+    const m = ln.match(pairRe);
+    if (m && hasLetters(m[2]) && hasLetters(m[3])) blocks.push({ i, home: m[2].trim(), away: m[3].trim(), tail: ln.slice(m[0].length) });
+  });
+  return blocks.map((b, k) => {
+    const end = Math.min(k + 1 < blocks.length ? blocks[k + 1].i : lines.length, b.i + 8);
+    const chunk = (b.tail + ' ' + lines.slice(b.i + 1, end).join(' ')).replace(/\b\d{1,2}:\d{2}\b/g, ' ');
+    const pct = [], dec = [], ints = [];
+    const re = /(\d{1,3}(?:[.,]\d{1,2})?)\s*(%)?/g;
+    let t;
+    while ((t = re.exec(chunk))){
+      const v = toNum(t[1]);
+      if (v == null) continue;
+      if (t[2]) pct.push(v);
+      else if (/[.,]/.test(t[1])){ if (v >= 1.01 && v < 100) dec.push(v); }
+      else if (v <= 100) ints.push(v);
+    }
+    let odds = null, folk = null;
+    const isOdds = tr => tr.every(x => x >= 1.01) && sum(tr.map(x => 1 / x)) > 0.85 && sum(tr.map(x => 1 / x)) < 1.4;
+    for (const tr of triplets(dec)) if (!odds && isOdds(tr)) odds = tr;
+    for (const tr of triplets(pct)) if (!folk && sum(tr) >= 85 && sum(tr) <= 115) folk = tr;
+    if (!folk) for (const tr of triplets(ints)) if (!folk && sum(tr) >= 95 && sum(tr) <= 105) folk = tr;
+    if (!folk) for (const tr of triplets(dec)) if (!folk && tr !== odds && sum(tr) >= 90 && sum(tr) <= 110) folk = tr;
+    return { home: b.home, away: b.away, odds: odds || [null, null, null], folk: folk || [null, null, null] };
+  });
+}
+
+function parseJson(root){
+  let events = null;
+  (function walk(o){
+    if (events || !o || typeof o !== 'object') return;
+    if (Array.isArray(o)){
+      if (o.length >= 13 && o.some(e => e && typeof e === 'object' && (e.eventDescription || e.homeTeam || e.home))){ events = o; return; }
+      o.forEach(walk);
+    } else Object.values(o).forEach(walk);
+  })(root);
+  if (!events) return [];
+  const nm = v => v && typeof v === 'object' ? (v.name || v.shortName || '') : (v || '');
+  const trip = o => {
+    if (!o) return [null, null, null];
+    if (Array.isArray(o)) return [toNum(o[0]), toNum(o[1]), toNum(o[2])];
+    return [toNum(o.one != null ? o.one : o['1']), toNum(o.x != null ? o.x : o.X), toNum(o.two != null ? o.two : o['2'])];
+  };
+  return events.map(e => {
+    let home = nm(e.homeTeam || e.home), away = nm(e.awayTeam || e.away);
+    if ((!home || !away) && e.eventDescription){
+      const p = String(e.eventDescription).split(/\s+[-–—]\s+/);
+      home = p[0] || ''; away = p.slice(1).join(' - ');
+    }
+    return { home: String(home).trim(), away: String(away).trim(), odds: trip(e.odds), folk: trip(e.svenskaFolket || e.distribution || e.folk) };
+  }).filter(e => e.home && e.away);
+}
+
+function parseAny(raw){
+  const txt = String(raw || '').trim();
+  if (!txt) return [];
+  if (txt[0] === '{' || txt[0] === '['){
+    try { const r = parseJson(JSON.parse(txt)); if (r.length) return r; } catch (e) { /* inte JSON */ }
+  }
+  if (txt.indexOf('<') !== -1){
+    try {
+      const doc = new DOMParser().parseFromString(txt, 'text/html');
+      const scripts = doc.querySelectorAll('script#__NEXT_DATA__, script[type="application/json"], script[type="application/ld+json"]');
+      for (const sc of scripts){
+        try { const r = parseJson(JSON.parse(sc.textContent)); if (r.length >= 13) return r; } catch (e) { /* hoppa över */ }
+      }
+      doc.querySelectorAll('script,style,noscript').forEach(n => n.remove());
+      doc.querySelectorAll('br').forEach(n => n.replaceWith('\n'));
+      doc.querySelectorAll('tr,li,p,div,h1,h2,h3,h4,h5,h6,section,article').forEach(n => n.append('\n'));
+      doc.querySelectorAll('td,th,span,a').forEach(n => n.append(' '));
+      return parseText(doc.body ? doc.body.textContent : '');
+    } catch (e) { /* faller tillbaka på ren text */ }
+  }
+  return parseText(txt);
+}
+
+const API = 'https://api.spela.svenskaspel.se/draw/1/stryktipset/draws';
+
+function mapEvents(events){
+  const nm = v => v && typeof v === 'object' ? (v.name || v.shortName || '') : (v || '');
+  const trip = o => {
+    if (!o) return [null, null, null];
+    if (Array.isArray(o)) return [toNum(o[0]), toNum(o[1]), toNum(o[2])];
+    return [toNum(o.one != null ? o.one : o['1']), toNum(o.x != null ? o.x : o.X), toNum(o.two != null ? o.two : o['2'])];
+  };
+  return events.map(e => {
+    let home = nm(e.homeTeam || e.home), away = nm(e.awayTeam || e.away);
+    if ((!home || !away) && e.eventDescription){
+      const p = String(e.eventDescription).split(/\s+[-–—]\s+/);
+      home = p[0] || ''; away = p.slice(1).join(' - ');
+    }
+    return { home: String(home).trim(), away: String(away).trim(), odds: trip(e.odds), folk: trip(e.svenskaFolket || e.distribution || e.folk) };
+  }).filter(e => e.home && e.away);
+}
+function drawsFrom(json){
+  let list = [];
+  if (json && Array.isArray(json.draws)) list = json.draws;
+  else if (json && json.draw) list = [json.draw];
+  else if (Array.isArray(json)) list = json;
+  return list.filter(d => d && Array.isArray(d.drawEvents));
+}
+function drawDay(d){
+  const t = d.closeTime || d.drawCloseTime || d.openTime;
+  const x = t ? new Date(t) : null;
+  return x && !isNaN(x) ? new Date(x.getFullYear(), x.getMonth(), x.getDate()) : null;
+}
+async function fetchJson(url){
+  // 1) matches.json på samma sida (uppdateras av GitHub-skriptet), 2) direkt mot Svenska Spel, 3) publik mellanserver
+  const tries = [
+    ['matches.json', 'matches.json?t=' + Date.now(), 6000],
+    ['direkt', url, 8000],
+    ['proxy', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url), 6000]
+  ];
+  const errs = [];
+  for (const [label, u, ms] of tries){
+    try {
+      const ctl = new AbortController();
+      const to = setTimeout(() => ctl.abort(), ms);
+      const r = await fetch(u, { signal: ctl.signal, cache: 'no-store' });
+      clearTimeout(to);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } catch (e) { errs.push(label + ': ' + ((e && e.message) || e)); }
+  }
+  throw new Error(errs.join(' · '));
+}
+// Hämtar omgången som ligger närmast vald helg
+async function loadForWeekend(){
+  const chosen = parseIso(S.date) || upcomingSaturday(new Date());
+  const json = await fetchJson(API);
+  const draws = drawsFrom(json);
+  if (!draws.length) throw new Error('Svaret kom fram men innehöll inga omgångar med matcher. Fält i svaret: ' + (json && typeof json === 'object' ? Object.keys(json).slice(0, 10).join(', ') : typeof json));
+  let best = null, bestDiff = Infinity;
+  draws.forEach(d => {
+    const day = drawDay(d);
+    if (!day) return;
+    const diff = Math.abs(Math.round((day - chosen) / 86400000));
+    if (diff < bestDiff){ best = d; bestDiff = diff; }
+  });
+  if (!best){ best = draws[0]; bestDiff = 0; }
+  if (bestDiff > 3){
+    const day = drawDay(best);
+    const e = new Error('annan-helg');
+    e.other = DAYS[day.getDay()] + ' ' + day.getDate() + ' ' + MONTHS[day.getMonth()];
+    throw e;
+  }
+  const list = mapEvents(best.drawEvents);
+  if (!list.length) throw new Error('Omgången saknar matcher');
+  return { list, drawNumber: best.drawNumber || '' };
+}
+
+let fetchSeq = 0;
+async function autoFetch(){
+  const seq = ++fetchSeq;
+  const msg = () => $('#fetchMsg');
+  if (!msg()) return;
+  const w = weekInfo();
+  msg().className = 'msg'; msg().textContent = 'Hämtar matcher för vecka ' + w.week + ' …';
+  const btn = $('#btnLoad'); if (btn) btn.disabled = true;
+  try {
+    const r = await loadForWeekend();
+    if (seq !== fetchSeq || S.step !== 'setup') return;
+    applyMatches(r.list);
+    S.drawNumber = r.drawNumber; S.matchesDate = S.date; save();
+    renderWeek(); renderMatchesPreview(); renderStart();
+    msg().className = 'msg ok'; msg().textContent = 'Matcherna är hämtade från Svenska Spel.';
+  } catch (e) {
+    if (seq !== fetchSeq || S.step !== 'setup' || !msg()) return;
+    msg().className = 'msg warn';
+    if (e && e.message === 'annan-helg'){
+      msg().textContent = 'Svenska Spel har just nu bara omgången för ' + e.other + '. Välj den helgen längst upp.';
+    } else {
+      msg().innerHTML = 'Kunde inte hämta matcherna. Tryck på Hämta matcher för att försöka igen, eller fyll i dem under Ändra matcher.<br><span class="hint">Felinfo: ' + esc((e && e.message) || e) + ' · sidan öppnad via ' + esc(location.protocol) + '</span>';
+    }
+  } finally {
+    const b = $('#btnLoad'); if (b) b.disabled = false;
+  }
+}
+
+function applyMatches(list){
+  const ms = list.slice(0, 13).map(m => ({ home: m.home, away: m.away, odds: m.odds.slice(), folk: m.folk.slice() }));
+  while (ms.length < 13) ms.push(emptyMatch());
+  S.matches = ms;
+  save();
+}
+
+/* =========================================================
+   Start: vy
+   ========================================================= */
+function viewSetup(){
+  const w = weekInfo();
+  app.innerHTML = `
+<header class="hero">
+  <h1>Vecka <span id="wkNum">${w.week}</span></h1>
+  <p class="hero-sub">Stryktipset, <span id="wkLabel">${esc(w.label)}</span><span id="cpn"></span></p>
+  <label class="hero-change">Annan helg? <input type="date" id="dateIn" value="${esc(S.date)}"></label>
+</header>
+
+<section class="blk" aria-labelledby="h-t">
+  <h2 id="h-t">Tippare</h2>
+  <div class="stepper">
+    <button type="button" id="nMinus" aria-label="Färre tippare">−</button>
+    <output id="nVal" aria-live="polite"></output>
+    <button type="button" id="nPlus" aria-label="Fler tippare">+</button>
+  </div>
+  <details>
+    <summary>Byt namn på tippare</summary>
+    <div class="names" id="names"></div>
+  </details>
+</section>
+
+<section class="blk" aria-labelledby="h-b">
+  <h2 id="h-b">Budget och system</h2>
+  <label for="budgetIn">Vad har ni att spela för?</label>
+  <div class="budget" style="margin-top:6px"><input type="number" id="budgetIn" inputmode="numeric" min="1" step="50" value="${esc(S.budget)}"><span>kr</span></div>
+  <div class="chips" id="chips"></div>
+  <p class="hint">Hel = alla tre tecken (3 streck) på en match, halv = två tecken (2 streck), spik = ett tecken (1 streck). En rad kostar ${ROW_PRICE} kr.</p>
+  <div id="sysList" role="radiogroup" aria-label="Spelsystem"></div>
+</section>
+
+<section class="blk" aria-labelledby="h-m">
+  <h2 id="h-m">Matcher</h2>
+  <p class="msg" id="mStatus" style="margin:0 0 10px"></p>
+  <div id="mlist" class="mlist"></div>
+  <p class="msg" id="fetchMsg" role="status"></p>
+  <div class="row">
+    <button class="btn" id="btnLoad" type="button">Hämta matcher</button>
+    <button class="btn" id="btnEdit" type="button">Ändra matcher</button>
+  </div>
+</section>
+
+<section class="blk" style="border-bottom:0">
+  <p class="start-info" id="startInfo"></p>
+  <button class="btn primary big" id="btnStart" type="button">Tippa</button>
+  <p class="msg warn" id="startWhy"></p>
+</section>
+
+<p class="foot">Spela aldrig för pengar ni inte har råd att förlora. Behöver du stöd: stodlinjen.se. Appen är inte kopplad till Svenska Spel, så kontrollera alltid raden innan ni lämnar in den.</p>`;
+
+  renderWeek(); renderMatchesPreview(); renderChips(); renderSystems(); renderPlayers(); renderStart();
+  if (!(hasMatches() && S.matchesDate === S.date)) autoFetch();
+
+  $('#dateIn').addEventListener('change', e => { if (parseIso(e.target.value)){ S.date = e.target.value; S.drawNumber = ''; save(); renderWeek(); autoFetch(); } });
+  $('#btnLoad').addEventListener('click', () => autoFetch());
+  $('#btnEdit').addEventListener('click', () => { S.step = 'edit'; render(); });
+  $('#budgetIn').addEventListener('input', e => { const v = Math.floor(toNum(e.target.value) || 0); S.budget = v; save(); renderChips(); renderSystems(); renderStart(); });
+  $('#chips').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; S.budget = +b.dataset.v; $('#budgetIn').value = S.budget; save(); renderChips(); renderSystems(); renderStart(); });
+  $('#sysList').addEventListener('change', e => { if (e.target.name === 'sys'){ const [f, h] = e.target.value.split('-').map(Number); S.choice = { f, h }; save(); renderStart(); } });
+  $('#nMinus').addEventListener('click', () => setPlayers(S.nPlayers - 1));
+  $('#nPlus').addEventListener('click', () => setPlayers(S.nPlayers + 1));
+  $('#names').addEventListener('input', e => { const i = +e.target.dataset.i; if (!isNaN(i)){ S.names[i] = e.target.value; save(); } });
+  $('#btnStart').addEventListener('click', () => {
+    if (!S.choice) return;
+    if (!hasMatches()){ S.step = 'plan'; render(); return; }
+    S.moves = []; S.step = 'tippa'; save(); render();
+  });
+}
+
+function renderWeek(){
+  const w = weekInfo();
+  $('#wkNum').textContent = w.week;
+  $('#wkLabel').textContent = w.label;
+  $('#cpn').textContent = S.drawNumber ? ', omgång ' + S.drawNumber : '';
+}
+
+function renderMatchesPreview(){
+  const box = $('#mlist');
+  const rows = S.matches.map((m, i) => {
+    const has = m.home.trim() && m.away.trim();
+    const nums = [0, 1, 2].map(s => `<span class="n"><b>${fmtOdds(m.odds[s])}</b><small>${fmtPct(m.folk[s])}</small></span>`).join('');
+    return `<div class="mrow"><span class="mnr">${i + 1}</span><span class="mteams${has ? '' : ' empty'}">${has ? esc(m.home) + ' – ' + esc(m.away) : 'Ej ifylld'}</span>${nums}</div>`;
+  }).join('');
+  box.innerHTML = `<div class="mhead"><span></span><span>Övre siffran är odds, nedre är streck</span><span>1</span><span>X</span><span>2</span></div>${rows}`;
+  const n = filledCount();
+  const st = $('#mStatus');
+  st.className = 'msg' + (n === 13 ? ' ok' : ' warn');
+  st.textContent = n === 13 ? '13 matcher inlästa.' : (n === 0 ? 'Inga matcher än.' : n + ' av 13 matcher ifyllda. Komplettera under Ändra matcher.');
+}
+
+function renderChips(){
+  $('#chips').innerHTML = [300, 500, 700, 1000, 1500].map(v => `<button type="button" class="chip" data-v="${v}" aria-pressed="${S.budget === v}">${v} kr</button>`).join('');
+}
+
+function renderSystems(){
+  const opts = systemOptions(S.budget);
+  const box = $('#sysList');
+  if (!opts.length){
+    S.choice = null;
+    box.innerHTML = '<p class="msg warn">Budgeten räcker inte till en rad. Det behövs minst ' + ROW_PRICE + ' kr.</p>';
+    return;
+  }
+  if (!S.choice || !opts.some(o => o.f === S.choice.f && o.h === S.choice.h)) S.choice = { f: opts[0].f, h: opts[0].h };
+  box.innerHTML = opts.map(o => {
+    const checked = o.f === S.choice.f && o.h === S.choice.h ? 'checked' : '';
+    const per = Math.ceil(o.rows / S.nPlayers);
+    return `<label class="sys"><input type="radio" name="sys" value="${o.f}-${o.h}" ${checked}>
+      <span class="sys-main">${sysName(o)}</span>
+      <span class="sys-meta">${fmtKr(o.rows)} · ${o.signs} streck · ${o.singles} spikar</span>
+      <span class="sys-sub">Ca ${fmtKr(per)} och ${fmtRange(o.signs / S.nPlayers)} streck per tippare</span></label>`;
+  }).join('');
+  save();
+}
+
+function setPlayers(n){
+  S.nPlayers = Math.max(1, Math.min(12, n));
+  save(); renderPlayers(); renderSystems(); renderStart();
+}
+function renderPlayers(){
+  $('#nVal').textContent = S.nPlayers;
+  $('#nMinus').disabled = S.nPlayers <= 1;
+  $('#nPlus').disabled = S.nPlayers >= 12;
+  $('#names').innerHTML = Array.from({ length: S.nPlayers }, (_, i) =>
+    `<label class="pname"><i style="background:${colorOf(i)}"></i><input type="text" data-i="${i}" maxlength="20" placeholder="Tippare ${i + 1}" value="${esc(S.names[i] || '')}" aria-label="Namn på tippare ${i + 1}"></label>`).join('');
+}
+
+function renderStart(){
+  const btn = $('#btnStart');
+  const canTip = hasMatches() && !!S.choice;
+  btn.dataset.mode = canTip ? 'tippa' : 'plan';
+  btn.textContent = 'Spara/Screenshot';
+  btn.disabled = !S.choice;
+  $('#startInfo').textContent = S.choice ? `${totalSigns(S.choice)} streck på ${S.nPlayers} tippare · ${fmtKr(rowsOf(S.choice) * ROW_PRICE)}` : '';
+  $('#startWhy').textContent = !S.choice ? 'Höj budgeten för att få ett system.' : (!hasMatches() ? 'Matcherna saknas ännu. Spara planen eller ta en skärmdump så länge.' : '');
+}
+
+/* =========================================================
+   Redigera matcher
+   ========================================================= */
+function viewEdit(){
+  const rows = S.matches.map((m, i) => `
+<fieldset class="erow"><legend>Match ${i + 1}</legend>
+  <div class="epair">
+    <input type="text" data-i="${i}" data-f="home" placeholder="Hemmalag" value="${esc(m.home)}" aria-label="Hemmalag match ${i + 1}">
+    <input type="text" data-i="${i}" data-f="away" placeholder="Bortalag" value="${esc(m.away)}" aria-label="Bortalag match ${i + 1}">
+  </div>
+  <div class="enums">
+    <span>Odds</span>
+    ${[0, 1, 2].map(s => `<input type="text" inputmode="decimal" data-i="${i}" data-f="odds" data-s="${s}" placeholder="${SIGNS[s]}" value="${m.odds[s] == null ? '' : fmtOdds(m.odds[s])}" aria-label="Odds ${SIGNS[s]} match ${i + 1}">`).join('')}
+    <span>Streck %</span>
+    ${[0, 1, 2].map(s => `<input type="text" inputmode="numeric" data-i="${i}" data-f="folk" data-s="${s}" placeholder="${SIGNS[s]}" value="${m.folk[s] == null ? '' : Math.round(m.folk[s])}" aria-label="Streck ${SIGNS[s]} match ${i + 1}">`).join('')}
+  </div>
+</fieldset>`).join('');
+  app.innerHTML = `
+<header class="bar"><button class="btn quiet" id="eBack" type="button">‹ Avbryt</button><h1>Ändra matcher</h1></header>
+${rows}
+<div class="dock"><button class="btn primary" id="eSave" type="button">Spara matcher</button></div>`;
+  $('#eBack').addEventListener('click', () => { S.step = 'setup'; render(); });
+  $('#eSave').addEventListener('click', () => {
+    const next = Array.from({ length: 13 }, emptyMatch);
+    app.querySelectorAll('input[data-i]').forEach(inp => {
+      const i = +inp.dataset.i, f = inp.dataset.f;
+      if (f === 'home' || f === 'away') next[i][f] = inp.value.trim();
+      else next[i][f][+inp.dataset.s] = toNum(inp.value);
+    });
+    S.matches = next; S.matchesDate = S.date; S.step = 'setup'; save(); render();
+  });
+}
+
+/* =========================================================
+   Tippa: vy
+   ========================================================= */
+function viewTippa(){
+  const n = S.nPlayers, total = totalSigns(S.choice), k = S.moves.length;
+  const p = k % n, col = colorOf(p);
+  const c = matchCounts();
+  const used3 = c.filter(x => x === 3).length, used2 = c.filter(x => x === 2).length, none = c.filter(x => x === 0).length;
+
+  const items = S.matches.map((mt, i) => {
+    const mk = marksOf(i);
+    const tag = c[i] === 3 ? '<span class="mtag">Hel</span>' : (c[i] === 2 ? '<span class="mtag">Halv</span>' : '');
+    const btns = SIGNS.map((sg, s) => {
+      const mv = mk.find(x => x.s === s);
+      const who = mv ? mv.k % n : -1;
+      const blocked = !mv && !canAdd(i, s, c).ok;
+      const label = `Match ${i + 1}, ${mt.home} mot ${mt.away}, tecken ${sg}` + (mt.odds[s] != null ? `, odds ${fmtOdds(mt.odds[s])}` : '') + (mt.folk[s] != null ? `, streck ${Math.round(mt.folk[s])} procent` : '') + (mv ? `, satt av ${nameOf(who)}` : '');
+      return `<button type="button" class="sign${mv ? ' on' : ''}${blocked ? ' blocked' : ''}" data-m="${i}" data-s="${s}" aria-pressed="${!!mv}" aria-label="${esc(label)}"${mv ? ` style="--pc:${colorOf(who)}"` : ''}>
+        <span class="sg">${sg}</span>
+        ${mv ? `<span class="who" aria-hidden="true">${who + 1}</span>` : ''}
+        <span class="od">${fmtOdds(mt.odds[s])}</span><span class="fo">${fmtPct(mt.folk[s])}</span></button>`;
+    }).join('');
+    return `<li class="match"><span class="mnum">${i + 1}</span><div class="mname"><span>${esc(mt.home)} – ${esc(mt.away)}</span>${tag}</div><div class="signs">${btns}</div></li>`;
+  }).join('');
+
+  app.innerHTML = `
+<header class="turn" style="--tc:${col}">
+  <div class="turn-row"><button class="turn-back" id="tBack" type="button">‹ Inställningar</button><span>Streck ${k + 1} av ${total}</span></div>
+  <div class="turn-name">${esc(nameOf(p))}</div>
+  <div class="turn-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${k}"><i style="width:${(k / total) * 100}%"></i></div>
+</header>
+<div class="quota">
+  <span>Hel <b>${used3}/${S.choice.f}</b></span>
+  <span>Halv <b>${used2}/${S.choice.h}</b></span>
+  <span><b>${none}</b> matcher saknar streck</span>
+</div>
+<p class="cap">Sätt ett streck och lämna över telefonen. Under varje tecken står odds, och under det streck i procent.</p>
+<ol class="matches">${items}</ol>
+<div class="dock"><button class="btn" id="tUndo" type="button" ${k ? '' : 'disabled'}>Ångra senaste</button></div>`;
+
+  $('#tBack').addEventListener('click', () => {
+    if (S.moves.length && !confirm('Gå tillbaka? Alla streck nollställs.')) return;
+    S.moves = []; S.step = 'setup'; save(); render();
+  });
+  $('#tUndo').addEventListener('click', undo);
+  $('.matches').addEventListener('click', e => {
+    const b = e.target.closest('.sign');
+    if (b) place(+b.dataset.m, +b.dataset.s);
+  });
+}
+
+/* =========================================================
+   Spelplan (spara / skärmdump)
+   ========================================================= */
+function planText(){
+  const w = weekInfo(), sys = S.choice, n = S.nPlayers, total = totalSigns(sys), rows = rowsOf(sys) * ROW_PRICE;
+  const who = Array.from({ length: n }, (_, i) => `${nameOf(i)}: ${Math.floor(total / n) + (i < total % n ? 1 : 0)} streck`).join('\n');
+  const ms = S.matches.filter(m => m.home.trim() && m.away.trim()).map((m, i) => `${i + 1}. ${m.home} – ${m.away}`).join('\n');
+  return `Stryktipset vecka ${w.week} (${w.label})\nBudget: ${fmtKr(S.budget)}\nSystem: ${sysName(sys)}, ${rowsOf(sys)} rader, ${fmtKr(rows)}\nStreck totalt: ${total}\nTippare: ${n}, ca ${fmtKr(Math.ceil(rows / n))} var\n\n${who}` + (ms ? `\n\nMatcher:\n${ms}` : '') + '\n';
+}
+function viewPlan(){
+  const w = weekInfo(), sys = S.choice, n = S.nPlayers, total = totalSigns(sys), rows = rowsOf(sys) * ROW_PRICE;
+  const who = Array.from({ length: n }, (_, i) => `<li class="srow" style="grid-template-columns:22px 1fr auto"><i style="width:18px;height:18px;border-radius:50%;background:${colorOf(i)}"></i><span class="mteams">${esc(nameOf(i))}</span><b>${Math.floor(total / n) + (i < total % n ? 1 : 0)} streck</b></li>`).join('');
+  const ms = S.matches.map((m, i) => (m.home.trim() && m.away.trim()) ? `<li class="srow" style="grid-template-columns:30px 1fr"><span class="mnr">${i + 1}</span><span class="mteams">${esc(m.home)} – ${esc(m.away)}</span></li>` : '').join('');
+  app.innerHTML = `
+<header class="done">
+  <h1>Spelplan vecka ${w.week}</h1>
+  <p>${esc(w.label)}</p>
+</header>
+<section class="blk">
+  <h2>${sysName(sys)}</h2>
+  <p><b>${rowsOf(sys)} rader</b> · <b>${fmtKr(rows)}</b> av budget ${fmtKr(S.budget)}</p>
+  <p>${total} streck · ${sys.h + sys.f ? (13 - sys.f - sys.h) : 13} spikar</p>
+  <p class="hint" style="margin-top:6px">Ca ${fmtKr(Math.ceil(rows / n))} per tippare.</p>
+</section>
+<section class="blk" style="padding-left:0;padding-right:0"><h2 style="padding:0 20px">Tippare</h2><ul class="slip" style="list-style:none;margin:0;padding:0">${who}</ul></section>
+${ms ? `<section class="blk" style="padding-left:0;padding-right:0"><h2 style="padding:0 20px">Matcher</h2><ul class="slip" style="list-style:none;margin:0;padding:0">${ms}</ul></section>` : ''}
+<section class="out">
+  <p class="hint">Ta en skärmdump av den här sidan, eller spara som text.</p>
+  <button class="btn primary" id="pCopy" type="button">Kopiera som text</button>
+  <button class="btn" id="pTxt" type="button">Ladda ner som textfil</button>
+</section>
+<div class="dock"><button class="btn" id="pBack" type="button">‹ Tillbaka</button></div>`;
+  const t = planText();
+  $('#pCopy').addEventListener('click', () => copyText(t));
+  $('#pTxt').addEventListener('click', () => download('stryktipset-plan-vecka-' + w.week + '.txt', t));
+  $('#pBack').addEventListener('click', () => { S.step = 'setup'; render(); });
+}
+
+/* =========================================================
+   Klar: vy och export
+   ========================================================= */
+const signsFor = m => marksOf(m).map(x => x.s).sort().map(s => SIGNS[s]).join('');
+
+function exportText(){
+  const w = weekInfo(), sys = S.choice;
+  const head = `Stryktipset vecka ${w.week} (${w.label})\nSystem: ${sysName({ f: sys.f, h: sys.h })}, ${rowsOf(sys)} rader, ${fmtKr(rowsOf(sys) * ROW_PRICE)}\n`;
+  const body = S.matches.map((m, i) => `${String(i + 1).padStart(2, ' ')}. ${m.home} – ${m.away}: ${signsFor(i)}`).join('\n');
+  const compact = S.matches.map((_, i) => signsFor(i)).join(' ');
+  return `${head}\n${body}\n\nKompakt rad:\n${compact}\n`;
+}
+function allRows(){
+  const opts = S.matches.map((_, i) => marksOf(i).map(x => x.s).sort().map(s => SIGNS[s]));
+  let rows = [''];
+  opts.forEach(o => { rows = rows.flatMap(r => o.map(s => r + s)); });
+  return rows;
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); toast('Kopierat'); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Kopierat'); } catch (_) { toast('Kunde inte kopiera. Markera texten och kopiera själv.'); }
+    ta.remove();
+  }
+}
+function download(name, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 600);
+}
+
+function viewKlar(){
+  const n = S.nPlayers, sys = S.choice, w = weekInfo();
+  const rows = rowsOf(sys) * ROW_PRICE;
+  const perSigns = Array.from({ length: n }, () => 0);
+  S.moves.forEach((_, k) => perSigns[k % n]++);
+  const legend = perSigns.map((c, i) => `<span><i style="background:${colorOf(i)}"></i>${esc(nameOf(i))} ${c}</span>`).join('');
+  const slip = S.matches.map((mt, i) => {
+    const mk = marksOf(i);
+    const boxes = SIGNS.map((sg, s) => { const mv = mk.find(x => x.s === s); return `<span class="sbox${mv ? ' on' : ''}"${mv ? ` style="--pc:${colorOf(mv.k % n)}"` : ''}>${sg}</span>`; }).join('');
+    return `<li class="srow"><span class="mnr">${i + 1}</span><span class="mteams">${esc(mt.home)} – ${esc(mt.away)}</span><span class="sboxes" aria-label="Valda tecken: ${signsFor(i)}">${boxes}</span></li>`;
+  }).join('');
+  const compact = S.matches.map((_, i) => signsFor(i)).join(' ');
+  const canRows = rows <= 200000;
+
+  app.innerHTML = `
+<header class="done">
+  <h1>Raden är klar</h1>
+  <p>Vecka ${w.week} · ${sysName(sys)} · ${rowsOf(sys)} rader · ${fmtKr(rows)} · ca ${fmtKr(Math.ceil(rows / n))} per tippare</p>
+</header>
+<div class="legend" aria-label="Streck per tippare">${legend}</div>
+<ol class="slip">${slip}</ol>
+<section class="out">
+  <p class="hint">Ta en skärmdump av raden eller spara den med knapparna nedan.</p>
+  <div class="compact" id="compact">${esc(compact)}</div>
+  <button class="btn primary big" id="bCopy" type="button">Kopiera raden</button>
+  <button class="btn" id="bShare" type="button">Dela</button>
+  <button class="btn" id="bTxt" type="button">Ladda ner som textfil</button>
+  <button class="btn" id="bRows" type="button" ${canRows ? '' : 'disabled'}>Ladda ner alla ${rowsOf(sys)} enkelrader</button>
+  <a class="btn" href="https://www.svenskaspel.se/stryktipset" target="_blank" rel="noopener">Öppna Stryktipset hos Svenska Spel</a>
+</section>
+<div class="guide">
+  <details><summary>Så lämnar ni in raden</summary>
+    <p>Appen kan inte skicka in raden åt er. Öppna Svenska Spel, välj Stryktipset och sätt tecknen enligt raden ovan. Garderingarna (två eller tre tecken på samma match) sätts som vanligt på kupongen.</p>
+    <p>Textfilen med enkelrader har en rad per kolumn, 13 tecken var (1, X, 2). Den är tänkt för verktyg eller spelombud som kan läsa in rader.</p>
+  </details>
+</div>
+<div class="dock">
+  <button class="btn" id="bUndo" type="button">‹ Ångra senaste streck</button>
+  <button class="btn" id="bNew" type="button">Ny omgång</button>
+</div>`;
+
+  const text = exportText();
+  $('#bCopy').addEventListener('click', () => copyText(text));
+  $('#bShare').addEventListener('click', async () => {
+    if (navigator.share){ try { await navigator.share({ title: 'Stryktipset vecka ' + w.week, text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    copyText(text);
+  });
+  $('#bTxt').addEventListener('click', () => download('stryktipset-vecka-' + w.week + '.txt', text));
+  $('#bRows').addEventListener('click', () => download('stryktipset-vecka-' + w.week + '-enkelrader.txt', allRows().join('\n') + '\n'));
+  $('#bUndo').addEventListener('click', undo);
+  $('#bNew').addEventListener('click', () => {
+    if (!confirm('Starta en ny omgång? Raden ni gjort nu nollställs.')) return;
+    S.moves = []; S.step = 'setup'; S.matches = Array.from({ length: 13 }, emptyMatch); S.date = isoDate(upcomingSaturday(new Date())); S.url = ''; S.drawNumber = ''; S.matchesDate = '';
+    save(); render();
+  });
+}
+
+/* =========================================================
+   Rendering
+   ========================================================= */
+let lastStep = null;
+function render(){
+  const y = window.scrollY;
+  ({ setup: viewSetup, edit: viewEdit, plan: viewPlan, tippa: viewTippa, klar: viewKlar }[S.step] || viewSetup)();
+  if (S.step === lastStep) window.scrollTo(0, y); else window.scrollTo(0, 0);
+  lastStep = S.step;
+}
+
+load();
+render();
+
+// Gör några funktioner åtkomliga för test i konsolen
+window.__strycktips = { systemOptions, parseText, parseJson, parseAny, isoWeek, canAdd, getState: () => S };
+})();
+</script>
+</body>
+</html>

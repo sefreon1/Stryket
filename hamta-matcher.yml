@@ -1,0 +1,45 @@
+# Lägg filen här i ditt repo: .github/workflows/hamta-matcher.yml
+# Den hämtar veckans Stryktipset-omgång från Svenska Spel och sparar den som matches.json
+# bredvid appen, så att appen kan läsa den utan att webbläsaren blockerar något.
+name: Hämta stryktipset-matcher
+
+on:
+  schedule:
+    - cron: '7 * * * *'   # en gång i timmen
+  workflow_dispatch:       # går också att köra för hand under fliken Actions
+
+permissions:
+  contents: write
+
+jobs:
+  hamta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Hämta omgångar från Svenska Spel
+        run: |
+          cat > hamta.mjs <<'JS'
+          import { writeFileSync } from 'node:fs';
+          const url = 'https://api.spela.svenskaspel.se/draw/1/stryktipset/draws';
+          const r = await fetch(url, { headers: { accept: 'application/json', 'user-agent': 'Mozilla/5.0 (strycktips)' } });
+          if (!r.ok) { console.error('Svenska Spel svarade HTTP ' + r.status); process.exit(1); }
+          const json = await r.json();
+          const draws = Array.isArray(json.draws) ? json.draws : [];
+          if (!draws.length) { console.error('Inga omgångar i svaret. Fält: ' + Object.keys(json).join(', ')); process.exit(1); }
+          writeFileSync('matches.json', JSON.stringify({ draws }));
+          console.log('Sparade ' + draws.length + ' omgång(ar)');
+          JS
+          node hamta.mjs
+          rm hamta.mjs
+
+      - name: Spara om något ändrats
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add matches.json
+          git diff --cached --quiet || (git commit -m "Uppdatera matcher" && git push)
