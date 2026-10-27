@@ -101,6 +101,17 @@ details textarea{margin:8px 0 10px}
 .enums input{min-height:40px;padding:6px;text-align:center}
 .dock{position:sticky;bottom:0;display:flex;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line);z-index:5}
 .dock .btn{flex:1}
+.dock .switch{flex:1.2}
+.switch{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 4px;font-size:14px;font-weight:600;line-height:1.15;cursor:pointer;user-select:none}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{position:relative;flex:none;width:52px;height:30px;border-radius:15px;background:#9AA5AF;transition:background-color .15s}
+.switch .track::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + .track{background:var(--turf)}
+.switch input:checked + .track::after{transform:translateX(22px)}
+.switch input:focus-visible + .track{outline:3px solid var(--focus);outline-offset:2px}
+.editnote{margin-top:6px;padding:6px 10px;border-radius:8px;background:var(--flag);color:var(--ink);font-size:14px;font-weight:600;line-height:1.25}
+.editing .sign.on{box-shadow:0 0 0 3px var(--flag),0 0 0 5px var(--ink)}
+.turn-show{min-height:34px;padding:0 12px;border-radius:8px;border:1.5px solid #fff;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}
 
 /* ---------- Tipping screen ---------- */
 .turn{position:sticky;top:0;z-index:5;padding:calc(8px + env(safe-area-inset-top)) 16px 12px;background:var(--tc);color:#fff}
@@ -153,7 +164,7 @@ details textarea{margin:8px 0 10px}
 
 @media (prefers-reduced-motion:reduce){
   .turn-name{animation:none}
-  .sign,#toast{transition:none}
+  .sign,#toast,.switch .track,.switch .track::after{transition:none}
 }
 </style>
 </head>
@@ -227,7 +238,10 @@ function defaultState(){
     nPlayers: 5,
     names: [],
     choice: null,   // { f: antal hel, h: antal halv }
-    moves: []       // [{ m: matchindex, s: 0|1|2 }] i den ordning de sattes
+    moves: [],      // [{ m: matchindex, s: 0|1|2, p: tippare }] i den ordning de sattes
+    editMode: false,
+    turn: 0,        // vems tur i den vanliga ordningen
+    pending: []     // tippare som ska sätta om ett borttaget streck
   };
 }
 
@@ -246,6 +260,10 @@ function load(){
     if (!Array.isArray(S.moves)) S.moves = [];
     if (!Array.isArray(S.names)) S.names = [];
     if (S.step === 'edit' || S.step === 'plan') S.step = 'setup';
+    S.editMode = false;
+    if (!Array.isArray(S.pending)) S.pending = [];
+    if (typeof S.turn !== 'number') S.turn = S.moves.length % (S.nPlayers || 1);
+    S.moves.forEach((mv, k) => { if (mv.p == null) mv.p = k % (S.nPlayers || 1); });
     if ((S.step === 'tippa' || S.step === 'klar') && (!S.choice || !hasMatches())) S.step = 'setup';
   } catch (e) { S = defaultState(); }
 }
@@ -291,7 +309,9 @@ const fmtRange = x => Number.isInteger(x) ? String(x) : Math.floor(x) + '–' + 
    Streck, tur och regler
    ========================================================= */
 function matchCounts(){ const c = Array(13).fill(0); S.moves.forEach(mv => c[mv.m]++); return c; }
-function marksOf(m){ const r = []; S.moves.forEach((mv, k) => { if (mv.m === m) r.push({ s: mv.s, k }); }); return r; }
+function marksOf(m){ const r = []; S.moves.forEach((mv, k) => { if (mv.m === m) r.push({ s: mv.s, k, p: mv.p }); }); return r; }
+// Den som tagit bort ett streck får sätta ett nytt först. Annars går turen runt som vanligt.
+function nextPlayer(){ return S.pending.length ? S.pending[0] : S.turn; }
 
 function canAdd(m, s, counts){
   const c = counts || matchCounts();
@@ -312,22 +332,28 @@ const REASONS = {
 };
 
 function place(m, s){
-  const last = S.moves.length - 1;
   const existing = S.moves.findIndex(x => x.m === m && x.s === s);
   if (existing !== -1){
-    if (existing === last){ undo(); return; }
-    toast('Bara det senaste strecket kan ångras. Använd "Ångra senaste".');
+    if (!S.editMode){ toast('Slå på "Ändra satta streck" längst ned för att ta bort ett streck.'); return; }
+    S.pending.push(S.moves[existing].p);
+    S.moves.splice(existing, 1);
+    if (S.step === 'klar') S.step = 'tippa';
+    save(); render();
+    toast('Strecket är borttaget. ' + nameOf(nextPlayer()) + ' sätter ett nytt.');
     return;
   }
+  if (S.moves.length >= totalSigns(S.choice)){ toast('Alla streck är satta. Ta bort ett streck i ändringsläget först.'); return; }
   const chk = canAdd(m, s);
   if (!chk.ok){ toast(REASONS[chk.reason] || 'Det strecket går inte i det här systemet.'); return; }
-  S.moves.push({ m, s });
-  if (S.moves.length >= totalSigns(S.choice)) S.step = 'klar';
+  if (S.pending.length) S.moves.push({ m, s, p: S.pending.shift(), r: true });
+  else { S.moves.push({ m, s, p: S.turn }); S.turn = (S.turn + 1) % S.nPlayers; }
+  if (S.moves.length >= totalSigns(S.choice)){ S.step = 'klar'; S.editMode = false; }
   save(); render();
 }
 function undo(){
   if (!S.moves.length) return;
-  S.moves.pop();
+  const mv = S.moves.pop();
+  if (mv.r) S.pending.unshift(mv.p); else S.turn = mv.p;
   if (S.step === 'klar') S.step = 'tippa';
   save(); render();
 }
@@ -596,7 +622,7 @@ function viewSetup(){
   $('#btnStart').addEventListener('click', () => {
     if (!S.choice) return;
     if (!hasMatches()){ S.step = 'plan'; render(); return; }
-    S.moves = []; S.step = 'tippa'; save(); render();
+    S.moves = []; S.turn = 0; S.pending = []; S.editMode = false; S.step = 'tippa'; save(); render();
   });
 }
 
@@ -698,7 +724,8 @@ ${rows}
    ========================================================= */
 function viewTippa(){
   const n = S.nPlayers, total = totalSigns(S.choice), k = S.moves.length;
-  const p = k % n, col = colorOf(p);
+  const full = k >= total;
+  const p = full ? 0 : nextPlayer(), col = full ? '#14573F' : colorOf(p);
   const c = matchCounts();
   const used3 = c.filter(x => x === 3).length, used2 = c.filter(x => x === 2).length, none = c.filter(x => x === 0).length;
 
@@ -707,7 +734,7 @@ function viewTippa(){
     const tag = c[i] === 3 ? '<span class="mtag">Hel</span>' : (c[i] === 2 ? '<span class="mtag">Halv</span>' : '');
     const btns = SIGNS.map((sg, s) => {
       const mv = mk.find(x => x.s === s);
-      const who = mv ? mv.k % n : -1;
+      const who = mv ? mv.p : -1;
       const blocked = !mv && !canAdd(i, s, c).ok;
       const label = `Match ${i + 1}, ${mt.home} mot ${mt.away}, tecken ${sg}` + (mt.odds[s] != null ? `, odds ${fmtOdds(mt.odds[s])}` : '') + (mt.folk[s] != null ? `, streck ${Math.round(mt.folk[s])} procent` : '') + (mv ? `, satt av ${nameOf(who)}` : '');
       return `<button type="button" class="sign${mv ? ' on' : ''}${blocked ? ' blocked' : ''}" data-m="${i}" data-s="${s}" aria-pressed="${!!mv}" aria-label="${esc(label)}"${mv ? ` style="--pc:${colorOf(who)}"` : ''}>
@@ -720,9 +747,10 @@ function viewTippa(){
 
   app.innerHTML = `
 <header class="turn" style="--tc:${col}">
-  <div class="turn-row"><button class="turn-back" id="tBack" type="button">‹ Inställningar</button><span>Streck ${k + 1} av ${total}</span></div>
-  <div class="turn-name">${esc(nameOf(p))}</div>
+  <div class="turn-row"><button class="turn-back" id="tBack" type="button">‹ Inställningar</button>${full ? '<button class="turn-show" id="tShow" type="button">Visa raden ›</button>' : `<span>Streck ${k + 1} av ${total}</span>`}</div>
+  <div class="turn-name">${full ? 'Alla streck satta' : esc(nameOf(p))}</div>
   <div class="turn-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${k}"><i style="width:${(k / total) * 100}%"></i></div>
+  ${S.editMode ? '<p class="editnote">Ändringsläge: tryck på ett satt streck för att ta bort det.</p>' : ''}
 </header>
 <div class="quota">
   <span>Hel <b>${used3}/${S.choice.f}</b></span>
@@ -730,14 +758,19 @@ function viewTippa(){
   <span><b>${none}</b> matcher saknar streck</span>
 </div>
 <p class="cap">Sätt ett streck och lämna över telefonen. Under varje tecken står odds, och under det streck i procent.</p>
-<ol class="matches">${items}</ol>
-<div class="dock"><button class="btn" id="tUndo" type="button" ${k ? '' : 'disabled'}>Ångra senaste</button></div>`;
+<ol class="matches${S.editMode ? ' editing' : ''}">${items}</ol>
+<div class="dock">
+  <button class="btn" id="tUndo" type="button" ${k ? '' : 'disabled'}>Ångra senaste</button>
+  <label class="switch"><input type="checkbox" role="switch" id="tEdit" ${S.editMode ? 'checked' : ''}><span class="track" aria-hidden="true"></span><span>Ändra satta streck</span></label>
+</div>`;
 
   $('#tBack').addEventListener('click', () => {
     if (S.moves.length && !confirm('Gå tillbaka? Alla streck nollställs.')) return;
-    S.moves = []; S.step = 'setup'; save(); render();
+    S.moves = []; S.turn = 0; S.pending = []; S.editMode = false; S.step = 'setup'; save(); render();
   });
   $('#tUndo').addEventListener('click', undo);
+  $('#tEdit').addEventListener('change', e => { S.editMode = e.target.checked; render(); });
+  if ($('#tShow')) $('#tShow').addEventListener('click', () => { S.editMode = false; S.step = 'klar'; save(); render(); });
   $('.matches').addEventListener('click', e => {
     const b = e.target.closest('.sign');
     if (b) place(+b.dataset.m, +b.dataset.s);
@@ -820,11 +853,11 @@ function viewKlar(){
   const n = S.nPlayers, sys = S.choice, w = weekInfo();
   const rows = rowsOf(sys) * ROW_PRICE;
   const perSigns = Array.from({ length: n }, () => 0);
-  S.moves.forEach((_, k) => perSigns[k % n]++);
+  S.moves.forEach(mv => { perSigns[mv.p]++; });
   const legend = perSigns.map((c, i) => `<span><i style="background:${colorOf(i)}"></i>${esc(nameOf(i))} ${c}</span>`).join('');
   const slip = S.matches.map((mt, i) => {
     const mk = marksOf(i);
-    const boxes = SIGNS.map((sg, s) => { const mv = mk.find(x => x.s === s); return `<span class="sbox${mv ? ' on' : ''}"${mv ? ` style="--pc:${colorOf(mv.k % n)}"` : ''}>${sg}</span>`; }).join('');
+    const boxes = SIGNS.map((sg, s) => { const mv = mk.find(x => x.s === s); return `<span class="sbox${mv ? ' on' : ''}"${mv ? ` style="--pc:${colorOf(mv.p)}"` : ''}>${sg}</span>`; }).join('');
     return `<li class="srow"><span class="mnr">${i + 1}</span><span class="mteams">${esc(mt.home)} – ${esc(mt.away)}</span><span class="sboxes" aria-label="Valda tecken: ${signsFor(i)}">${boxes}</span></li>`;
   }).join('');
   const compact = S.matches.map((_, i) => signsFor(i)).join(' ');
@@ -853,7 +886,7 @@ function viewKlar(){
   </details>
 </div>
 <div class="dock">
-  <button class="btn" id="bUndo" type="button">‹ Ångra senaste streck</button>
+  <button class="btn" id="bUndo" type="button">‹ Ändra streck</button>
   <button class="btn" id="bNew" type="button">Ny omgång</button>
 </div>`;
 
@@ -865,10 +898,10 @@ function viewKlar(){
   });
   $('#bTxt').addEventListener('click', () => download('stryktipset-vecka-' + w.week + '.txt', text));
   $('#bRows').addEventListener('click', () => download('stryktipset-vecka-' + w.week + '-enkelrader.txt', allRows().join('\n') + '\n'));
-  $('#bUndo').addEventListener('click', undo);
+  $('#bUndo').addEventListener('click', () => { S.editMode = true; S.step = 'tippa'; save(); render(); });
   $('#bNew').addEventListener('click', () => {
     if (!confirm('Starta en ny omgång? Raden ni gjort nu nollställs.')) return;
-    S.moves = []; S.step = 'setup'; S.matches = Array.from({ length: 13 }, emptyMatch); S.date = isoDate(upcomingSaturday(new Date())); S.url = ''; S.drawNumber = ''; S.matchesDate = '';
+    S.moves = []; S.turn = 0; S.pending = []; S.step = 'setup'; S.matches = Array.from({ length: 13 }, emptyMatch); S.date = isoDate(upcomingSaturday(new Date())); S.url = ''; S.drawNumber = ''; S.matchesDate = '';
     save(); render();
   });
 }
