@@ -662,7 +662,7 @@ function renderStart(){
   const btn = $('#btnStart');
   const canTip = hasMatches() && !!S.choice;
   btn.dataset.mode = canTip ? 'tippa' : 'plan';
-  btn.textContent = 'Spara/Screenshot';
+  btn.textContent = 'Nu tippar vi!!!!';
   btn.disabled = !S.choice;
   $('#startInfo').textContent = S.choice ? `${totalSigns(S.choice)} streck på ${S.nPlayers} tippare · ${fmtKr(rowsOf(S.choice) * ROW_PRICE)}` : '';
   $('#startWhy').textContent = !S.choice ? 'Höj budgeten för att få ett system.' : (!hasMatches() ? 'Matcherna saknas ännu. Spara planen eller ta en skärmdump så länge.' : '');
