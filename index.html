@@ -261,6 +261,12 @@ function load(){
     if (!Array.isArray(S.names)) S.names = [];
     if (S.step === 'edit' || S.step === 'plan') S.step = 'setup';
     S.editMode = false;
+    // En gammal helg på startbilden nollställs, så att nästa omgång hämtas i stället för att gamla matcher ligger kvar
+    if (S.step === 'setup' && S.date && S.date < isoDate(new Date())){
+      S.date = isoDate(upcomingSaturday(new Date()));
+      S.matches = Array.from({ length: 13 }, emptyMatch);
+      S.matchesDate = ''; S.drawNumber = ''; S.moves = []; S.turn = 0; S.pending = [];
+    }
     if (!Array.isArray(S.pending)) S.pending = [];
     if (typeof S.turn !== 'number') S.turn = S.moves.length % (S.nPlayers || 1);
     S.moves.forEach((mv, k) => { if (mv.p == null) mv.p = k % (S.nPlayers || 1); });
