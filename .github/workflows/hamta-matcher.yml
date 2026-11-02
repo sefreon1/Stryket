@@ -1,6 +1,6 @@
 # Lägg filen här i ditt repo: .github/workflows/hamta-matcher.yml
-# Den hämtar veckans Stryktipset-omgång från Svenska Spel och sparar den som matches.json
-# bredvid appen, så att appen kan läsa den utan att webbläsaren blockerar något.
+# Hämtar Stryktipset-omgången från Svenska Spel varje timme och sparar den som matches.json.
+# Misslyckas hämtningen behålls förra filen och körningen blir ändå grön, så inga felmejl skickas.
 name: Hämta stryktipset-matcher
 
 on:
@@ -22,22 +22,28 @@ jobs:
           node-version: 20
 
       - name: Hämta omgångar från Svenska Spel
+        continue-on-error: true
         run: |
           cat > hamta.mjs <<'JS'
           import { writeFileSync } from 'node:fs';
-          const url = 'https://api.spela.svenskaspel.se/draw/1/stryktipset/draws';
-          const r = await fetch(url, { headers: { accept: 'application/json', 'user-agent': 'Mozilla/5.0 (strycktips)' } });
-          if (!r.ok) { console.error('Svenska Spel svarade HTTP ' + r.status); process.exit(1); }
-          const json = await r.json();
-          const draws = Array.isArray(json.draws) ? json.draws : [];
-          if (!draws.length) { console.error('Inga omgångar i svaret. Fält: ' + Object.keys(json).join(', ')); process.exit(1); }
-          writeFileSync('matches.json', JSON.stringify({ draws }));
-          console.log('Sparade ' + draws.length + ' omgång(ar)');
+          try {
+            const url = 'https://api.spela.svenskaspel.se/draw/1/stryktipset/draws';
+            const r = await fetch(url, { headers: { accept: 'application/json', 'user-agent': 'Mozilla/5.0 (strycktips)' } });
+            if (!r.ok) throw new Error('Svenska Spel svarade HTTP ' + r.status);
+            const json = await r.json();
+            const draws = Array.isArray(json.draws) ? json.draws : [];
+            if (!draws.length) throw new Error('Inga omgångar i svaret. Fält: ' + Object.keys(json).join(', '));
+            writeFileSync('matches.json', JSON.stringify({ draws }));
+            console.log('Sparade ' + draws.length + ' omgång(ar)');
+          } catch (e) {
+            console.log('Hämtningen gick inte, behåller förra filen: ' + e.message);
+          }
           JS
-          node hamta.mjs
-          rm hamta.mjs
+          node hamta.mjs || true
+          rm -f hamta.mjs
 
       - name: Spara om något ändrats
+        continue-on-error: true
         run: |
           git config user.name "github-actions"
           git config user.email "actions@users.noreply.github.com"
