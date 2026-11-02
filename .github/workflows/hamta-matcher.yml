@@ -32,7 +32,7 @@ jobs:
             if (!r.ok) throw new Error('Svenska Spel svarade HTTP ' + r.status);
             const json = await r.json();
             const draws = Array.isArray(json.draws) ? json.draws : [];
-            if (!draws.length) throw new Error('Inga omgångar i svaret. Fält: ' + Object.keys(json).join(', '));
+            if (!draws.length) throw new Error('Inga omgångar i svaret. Svenska Spel skriver: ' + JSON.stringify(json.error || null));
             writeFileSync('matches.json', JSON.stringify({ draws }));
             console.log('Sparade ' + draws.length + ' omgång(ar)');
           } catch (e) {
